@@ -1,7 +1,8 @@
 
-# Global Locks For Low-Level Hardware Access
+## Global Locks For Low-Level Hardware Access
 
-## SMBus (System Management Bus)
+
+### SMBus (System Management Bus)
 
 Argus Monitor SMBus access is needed for memory temperatures, mainboard RGB and memory modules RGB.
 
@@ -9,7 +10,7 @@ Argus Monitor disables its SMBus access if it detects some other application whi
 
 Unsynchronized SMBus access is dangerous and might cause weird issues like system shutdowns, BSOD and in rare cases may brick the RAM SPD chip as worst case.
 
-Tools such as Aida64, HWiNFO, SIV, Argus Monitor all share a specific [lock (or mutex)](https://en.wikipedia.org/wiki/Lock_(computer_science)) to ensure secure access to the SMBus, even when multiple programs are running simultaneously.
+Tools such as Aida64, HWiNFO, SIV, Argus Monitor all share a specific [lock (or mutex)](https://en.wikipedia.org/wiki/Lock_(computer_science)) to ensure **secure access** to the SMBus, even when multiple programs are running simultaneously.
 
 This mutex is named "Global\Access_SMBUS.HTP.Method".
 
@@ -19,19 +20,25 @@ Argus preemptively avoids potential issues for its users by automatically disabl
 If you need SMBus access in Argus Monitor (for memory temperatures and RGB) we recommend to stop using tools from Asus and Corsair.
 
 
-## Known mutex usage of various vendors of low-level hardware access software
+### SuperIO chips
 
-| Vendor                                            | SMBus Mutex           | ISABus Mutex          | Remarks |
+WIP
+
+
+### Known mutex usage of various vendors of low-level hardware access software (in alphabetical order)
+
+| Vendor                                                | SMBus Mutex           | ISABus Mutex          | Remarks |
 |---|---|---|---|
-| [Aida64](https://www.aida64.com)                  | :white_check_mark:    | :white_check_mark:    | - |
-| [Argus Monitor](https://www.argusmonitor.com)     | :white_check_mark:    | :white_check_mark:    | - |
-| [HWiNFO](https://www.hwinfo.com)                  | :white_check_mark:    | :white_check_mark:    | - |
-| [SIV](http://rh-software.com)                     | :white_check_mark:    | :white_check_mark:    | - |
+| [Aida64](https://www.aida64.com)                      | :white_check_mark:    | :white_check_mark:    | - |
+| [Argus Monitor](https://www.argusmonitor.com)         | :white_check_mark:    | :white_check_mark:    | - |
+| Asus: AI Suite, Armoury Crate, etc.                   | :x:                   | :x:                   | - |
+| Corsair iCUE                                          | :x:                   | :x:                   | - |
+| [CPU-Z](https://www.cpuid.com/softwares/cpu-z.html)   | :white_check_mark:    | :white_check_mark:    | - |
+| [HWiNFO](https://www.hwinfo.com)                      | :white_check_mark:    | :white_check_mark:    | - |
 | [Libre Hardware Monitor](https://github.com/LibreHardwaRemonitor/LibreHardwareMonitor) | :grey_question: | :grey_question: | - |
-| [OpenRGB](https://openrgb.org)                    | :grey_question:       | :grey_question:       | - |
-| [SignalRGB](https://signalrgb.com)                | :grey_question:       | :grey_question:       | - |
-| Corsair iCUE                                      | :x:                   | :x:                   | - |
-| Asus: AI Suite, Armoury Crate etc.                | :x:                   | :x:                   | - |
+| [OpenRGB](https://openrgb.org)                        | :grey_question:       | :grey_question:       | - |
+| [SignalRGB](https://signalrgb.com)                    | :grey_question:       | :grey_question:       | - |
+| [SIV](http://rh-software.com)                         | :white_check_mark:    | :white_check_mark:    | - |
 
 <br>
 
@@ -41,29 +48,46 @@ If you need SMBus access in Argus Monitor (for memory temperatures and RGB) we r
 | ISABus Mutex  | Global\Access_ISABUS.HTP.Method       | SuperIO chips (mainboard temperatures, mainboard fans) |
 
 
-## Links and Quotations
+### Links and Quotations
 
-Martin, author of HWiNFO:
+##### Fiery, author of Aida64:
 
-"Well, yes there's a problem with such software as many vendors refuse to play fair and implement synchronization with other applications."
+> "The folks at Corsair are telling you the truth.  What they wouldn't tell you is that the ball is rolling in their court.  In their previous software (called Corsair Link) they used to implement the necessary standardized synchronization mutexes that allowed their software to work with all major 3rd party monitoring software out there, like AIDA64, CPU-Z, HWiNFO, HWMonitor, SIV, etc.  What happened is they discontinued using those mutexes and let the collisions happen, and continue to let them happen despite the fact that multiple developers (including us of course) have been pestering them for over a year now.  I don't think it's wise to stick to their position of one and only one software to rule all Corsair hardware (ie. Corsair iCUE), but it's their position and they seem to want to stick to it no matter what."
+
+https://forums.aida64.com/topic/5097-aida64-and-icue-commander-pro/
+<br>
+<br>
+
+##### Martin, author of HWiNFO:
+
+> "Well, yes there's a problem with such software as many vendors refuse to play fair and implement synchronization with other applications."
+
 https://www.hwinfo.com/forum/threads/hwinfo64-causes-ram-lighting-issues-with-patriot-viper-rgb-3600mhz.6925/
+<br>
 
-"Then that's a different conflict on SMBus. Unfortunately Corsair is known for not playing nice with anything else and no will to fix that."
-"No way to fix this without Corsair's cooperation, but there's doesn't seem to be any interest from their side."
+> "Then that's a different conflict on SMBus. Unfortunately Corsair is known for not playing nice with anything else and no will to fix that."
+> "No way to fix this without Corsair's cooperation, but there's doesn't seem to be any interest from their side."
+
 https://www.hwinfo.com/forum/threads/7-42-update-causes-icue-fans-to-flash-off-on-every-2-4-seconds.8776/page-5
+<br>
+<br>
 
+##### Ray, author of SIV (System Information Viewer):
 
-Ray, author of SIV (System Information Viewer):
+> "When there is a hardware access contention/race issue this will only happen from time-to-time. The fundamental problem is that some programs fail to use global locks and assume they are the only program accessing the hardware."
 
-"When there is a hardware access contention/race issue this will only happen from time-to-time. The fundamental problem is that some programs fail to use global locks and assume they are the only program accessing the hardware."
 https://forum.corsair.com/forums/topic/107784-corsair-link-displaying-00-for-devices/page/2/
+<br>
 
-"If you have ASUS AI Suite active you should not use any other sensor monitoring programs active as it is poorly engineered an fails to use the Global\Access_ISABUS.HTP.Method + Global\Access_SMBUS.HTP.Method + Global\Access_EC + etc. named mutexes to interlock access to the sensors. If you were doing this it could be the root cause of the system reboots.
-That said I agree that Corsair Link is not of an acceptable quality."
+> "If you have ASUS AI Suite active you should not use any other sensor monitoring programs active as it is poorly engineered an fails to use the Global\Access_ISABUS.HTP.Method + Global\Access_SMBUS.HTP.Method + Global\Access_EC + etc. named mutexes to interlock access to the sensors. If you were doing this it could be the root cause of the system reboots.
+> That said I agree that Corsair Link is not of an acceptable quality."
+
 https://forum.corsair.com/forums/topic/126100-corsair-link-the-longest-running-joke-in-pc-history/
+<br>
+<br>
 
 
-## License
+### License
 
 **Creative Commons BY-NC-SA**<br>
 Give Credit, NonCommercial, ShareAlike
