@@ -8,37 +8,41 @@ Argus Monitor SMBus access is needed for memory temperatures, mainboard RGB and 
 
 Argus Monitor disables its SMBus access if it detects some other application which is known to access the SMBus without using the proper locking mechanism for SMBus shared access.
 
-Unsynchronized SMBus access is dangerous and might cause weird issues like system shutdowns, BSOD and in rare cases may brick the RAM SPD chip as worst case.
+Unsynchronized SMBus access is dangerous and might cause weird issues like system shutdowns, BSOD and in rare cases may corrupt the SPD chips on memory modules.
 
 Tools such as Aida64, HWiNFO, SIV, Argus Monitor all share a specific [lock (or mutex)](https://en.wikipedia.org/wiki/Lock_(computer_science)) to ensure **secure access** to the SMBus, even when multiple programs are running simultaneously.
 
-This mutex is named "Global\Access_SMBUS.HTP.Method".
+This mutex is named `Global\Access_SMBUS.HTP.Method`.
 
 Unfortunately, some vendors like Asus or Corsair refuse to use this mutex and behave like they are the only one to access the SMBus.
 
-Argus preemptively avoids potential issues for its users by automatically disabling its own SMBus access in such cases.
+Argus Monitor preemptively avoids potential issues for its users by automatically disabling its own SMBus access in such cases.
 If you need SMBus access in Argus Monitor (for memory temperatures and RGB) we recommend to stop using tools from Asus and Corsair.
 
 
-### SuperIO chips
+### SuperIO Chips
 
-WIP
+For accessing the SuperIO chip on the mainboard (which delivers mainboard temperatures and mainboard fan data), a similar mutex is used, this one is named `Global\Access_ISABUS.HTP.Method`.
+
+Like with the SMBus mutex, for **safe handling**, all programs accessing the SuperIO chip need to use this mutex when multiple programs are running simultaneously.
 
 
 ### Known mutex usage of various vendors of low-level hardware access software (in alphabetical order)
 
-| Vendor                                                | SMBus Mutex           | ISABus Mutex          | Remarks |
+| Vendor                                                        | SMBus Mutex           | ISABus Mutex          | Remarks |
 |---|---|---|---|
-| [Aida64](https://www.aida64.com)                      | :white_check_mark:    | :white_check_mark:    | - |
-| [Argus Monitor](https://www.argusmonitor.com)         | :white_check_mark:    | :white_check_mark:    | - |
-| Asus: AI Suite, Armoury Crate, etc.                   | :x:                   | :x:                   | - |
-| Corsair iCUE                                          | :x:                   | :x:                   | - |
-| [CPU-Z](https://www.cpuid.com/softwares/cpu-z.html)   | :white_check_mark:    | :white_check_mark:    | - |
-| [HWiNFO](https://www.hwinfo.com)                      | :white_check_mark:    | :white_check_mark:    | - |
-| [Libre Hardware Monitor](https://github.com/LibreHardwaRemonitor/LibreHardwareMonitor) | :grey_question: | :grey_question: | - |
-| [OpenRGB](https://openrgb.org)                        | :grey_question:       | :grey_question:       | - |
-| [SignalRGB](https://signalrgb.com)                    | :grey_question:       | :grey_question:       | - |
-| [SIV](http://rh-software.com)                         | :white_check_mark:    | :white_check_mark:    | - |
+| [Aida64](https://www.aida64.com)                              | :white_check_mark:    | :white_check_mark:    | - |
+| [Argus Monitor](https://www.argusmonitor.com)                 | :white_check_mark:    | :white_check_mark:    | - |
+| [Asus](https://www.asus.com) AI Suite, Armoury Crate, etc.    | :x:                   | :x:                   | - |
+| [Corsair](https://www.corsair.com) Link, iCUE                 | :x:                   | :x:                   | - |
+| [CPU-Z](https://www.cpuid.com/softwares/cpu-z.html)           | :white_check_mark:    | :white_check_mark:    | - |
+| [HWiNFO](https://www.hwinfo.com)                              | :white_check_mark:    | :white_check_mark:    | - |
+| [HWMonitor](https://www.cpuid.com/softwares/hwmonitor.html)   | :white_check_mark:    | :white_check_mark:    | - |
+| [Libre Hardware Monitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor) | :x: | :white_check_mark: | Unknown why SMBus mutex is not used  |
+| [OpenRGB](https://openrgb.org)                                | :grey_question:       | :grey_question:       | - |
+| [SignalRGB](https://signalrgb.com)                            | :grey_question:       | :grey_question:       | Unknown |
+| [SIV](http://rh-software.com)                                 | :white_check_mark:    | :white_check_mark:    | - |
+| [SpeedFan](https://www.almico.com/speedfan.php)               | :white_check_mark:    | :white_check_mark:    | - |
 
 <br>
 
