@@ -39,9 +39,9 @@ Like with the SMBus mutex, for **safe handling**, all programs accessing the Sup
 | [HWiNFO](https://www.hwinfo.com)                              | :white_check_mark:    | :white_check_mark:    | - |
 | [HWMonitor](https://www.cpuid.com/softwares/hwmonitor.html)   | :white_check_mark:    | :white_check_mark:    | - |
 | [Libre Hardware Monitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor) | :x: | :white_check_mark: | Unknown why SMBus mutex is not used  |
-| [OpenRGB](https://openrgb.org)                                | :grey_question:       | :grey_question:       | - |
-| [SignalRGB](https://signalrgb.com)                            | :grey_question:       | :grey_question:       | Unknown |
-| [SIV](http://rh-software.com)                                 | :white_check_mark:    | :white_check_mark:    | - |
+| [OpenRGB](https://openrgb.org)                                | :question:            | :question:            | - |
+| [SignalRGB](https://signalrgb.com)                            | :question:            | :question:            | Unknown |
+| [SIV](http://rh-software.com) (System Information Viewer)     | :white_check_mark:    | :white_check_mark:    | - |
 | [SpeedFan](https://www.almico.com/speedfan.php)               | :white_check_mark:    | :white_check_mark:    | - |
 
 <br>
@@ -76,7 +76,7 @@ https://www.hwinfo.com/forum/threads/7-42-update-causes-icue-fans-to-flash-off-o
 <br>
 <br>
 
-##### Ray, author of SIV (System Information Viewer):
+##### Ray, author of SIV:
 
 > "When there is a hardware access contention/race issue this will only happen from time-to-time. The fundamental problem is that some programs fail to use global locks and assume they are the only program accessing the hardware."
 
@@ -89,6 +89,70 @@ https://forum.corsair.com/forums/topic/107784-corsair-link-displaying-00-for-dev
 https://forum.corsair.com/forums/topic/126100-corsair-link-the-longest-running-joke-in-pc-history/
 <br>
 <br>
+
+
+### Sample Code
+
+C Sample Code for creating the mutex with the proper access rights (by Ray, author of SIV)
+
+```
+HANDLE CreateWorldMutex(wchar_t const* const mutex_name)                      // Create/Open a Mutex with
+{                                                                             // appropriate protection
+    HANDLE                   mhl;                                             // Mutex Handle
+    SID*                     sid {};                                          // Security ID
+    SECURITY_ATTRIBUTES      sab;                                             // Security Attributes Block
+    SECURITY_DESCRIPTOR      sdb;                                             // Security Descriptor Block
+    ACL                      acl[1024];                                       // ACL Area
+    SID_IDENTIFIER_AUTHORITY swa[1] = { SECURITY_WORLD_SID_AUTHORITY };       // World access
+
+    InitializeSecurityDescriptor(&sdb, SECURITY_DESCRIPTOR_REVISION);         // setup Security Descriptor
+
+    if (AllocateAndInitializeSid(swa,                                         // SID Identifier Authority
+                                 1,                                           // Sub Authority count
+                                 SECURITY_WORLD_RID,                          // Sub Authority 0
+                                 0,                                           // Sub Authority 1
+                                 0,                                           // Sub Authority 2
+                                 0,                                           // Sub Authority 3
+                                 0,                                           // Sub Authority 4
+                                 0,                                           // Sub Authority 5
+                                 0,                                           // Sub Authority 6
+                                 0,                                           // Sub Authority 7
+                                 (void**)&sid)
+        &&                                                                    // returned SID
+        (InitializeAcl(acl,                                                   // ACL setup OK and
+                       sizeof(acl),                                           //
+                       ACL_REVISION))
+        &&                                                                    //
+        (AddAccessAllowedAce(acl,                                             // ACE setup OK and
+                             ACL_REVISION,                                    //
+                             MUTANT_ALL_ACCESS,                               // Access Rights Mask
+                             sid))) {
+        SetSecurityDescriptorDacl(&sdb, TRUE, acl, FALSE);                    // yes, setup world access
+    } else {
+        SetSecurityDescriptorDacl(&sdb, TRUE, nullptr, FALSE);                // no, setup with default
+    }
+
+    sab.nLength              = sizeof(sdb);                                   // setup Security Attributes Block
+    sab.bInheritHandle       = FALSE;                                         //
+    sab.lpSecurityDescriptor = &sdb;                                          //
+
+    if (((mhl = CreateMutex(&sab,                                             // Create/Open with Global\ Unprotected or
+                            FALSE,                                            //
+                            mutex_name))
+         != nullptr)
+        ||                                                                    //
+        ((mhl = OpenMutex(READ_CONTROL | MUTANT_QUERY_STATE | SYNCHRONIZE,    // Open with Global\ Protected (probably Aquasuite)
+                          FALSE,                                              //
+                          mutex_name))
+         != nullptr)) { }                                                     //
+
+    if (sid) {                                                                // need to free the SID ?
+        FreeSid(sid);                                                         // yes, free it
+    }
+
+    return mhl;                                                               // return the handle
+}
+```
 
 
 ### License
